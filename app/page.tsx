@@ -359,7 +359,7 @@ export default function SEOContentDashboard() {
       // Use development proxy to avoid CORS issues
       const n8nUrl = process.env.NODE_ENV === 'development' 
         ? '/api/n8n-proxy'  // Development proxy
-        : 'http://localhost:5678/webhook/input-webhook-sce'  // Production direct call
+        : 'https://n8n.srv926051.hstgr.cloud/webhook/input-webhook-sce'  // Production direct call
       
       const n8nResponse = await fetch(n8nUrl, {
         method: 'POST',

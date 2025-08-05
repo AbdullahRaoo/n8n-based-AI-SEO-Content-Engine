@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // Forward the request to n8n webhook
-    const n8nResponse = await fetch('http://localhost:5678/webhook/input-webhook-sce', {
+    const n8nResponse = await fetch('https://n8n.srv926051.hstgr.cloud/webhook/input-webhook-sce', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
