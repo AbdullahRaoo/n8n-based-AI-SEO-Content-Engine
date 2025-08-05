@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Content Engine - Dynamic Template</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        .prose-custom {
+            color: #374151;
+            line-height: 1.75;
+        }
+        .prose-custom h1 {
+            color: #1f2937;
+            font-weight: 800;
+            font-size: 2.25rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+        .prose-custom h2 {
+            color: #1f2937;
+            font-weight: 700;
+            font-size: 1.875rem;
+            line-height: 1.3;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 0.5rem;
+        }
+        .prose-custom h3 {
+            color: #374151;
+            font-weight: 600;
+            font-size: 1.5rem;
+            line-height: 1.4;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .prose-custom p {
+            margin-bottom: 1.5rem;
+        }
+        .prose-custom ul {
+            margin: 1.5rem 0;
+            padding-left: 1.5rem;
+        }
+        .prose-custom li {
+            margin-bottom: 0.5rem;
+        }
+        .quick-answer-box {
+            background: linear-gradient(135deg, #dbeafe 0%, #f0f9ff 100%);
+            border-left: 4px solid #3b82f6;
+        }
+        .tip-box {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border-left: 4px solid #10b981;
+        }
+        .info-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fef7cd 100%);
+            border-left: 4px solid #f59e0b;
+        }
+        .comparison-table th {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: white;
+        }
+        .comparison-table td {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .comparison-table tr:hover {
+            background-color: #f9fafb;
+        }
+        .star-rating {
+            color: #fbbf24;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .content-gradient {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        }
+        .file-drop-zone {
+            border: 2px dashed #cbd5e1;
+            background: #f8fafc;
+            transition: all 0.3s ease;
+        }
+        .file-drop-zone:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .file-drop-zone.dragover {
+            border-color: #1d4ed8;
+            background: #dbeafe;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="hero-gradient text-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-6 py-8">
+            <div class="text-center">
+                <h1 class="text-3xl md:text-4xl font-bold mb-4">
+                    SEO Content Engine - Dynamic Template
+                </h1>
+                <p class="text-xl text-blue-100 max-w-3xl mx-auto">
+                    Load and visualize your JSON content files instantly
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- File Upload Section -->
+    <div class="max-w-6xl mx-auto px-6 py-8">
+        <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Load Content JSON File</h2>
+            
+            <!-- File Drop Zone -->
+            <div id="dropZone" class="file-drop-zone rounded-lg p-8 text-center mb-4">
+                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p class="text-lg text-gray-600 mb-2">Drop your JSON file here or</p>
+                <button id="browseButton" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    Browse Files
+                </button>
+                <input type="file" id="fileInput" accept=".json" class="hidden">
+                <p class="text-sm text-gray-500 mt-2">Supports JSON files from your SEO content engine</p>
+            </div>
+
+            <!-- File Info -->
+            <div id="fileInfo" class="hidden">
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span id="fileName" class="text-green-800 font-medium"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Load Buttons -->
+            <div class="mt-4">
+                <p class="text-sm text-gray-600 mb-2">Quick load sample files:</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="loadSampleFile('format final output try3.json')" class="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-200 transition-colors">
+                        Load Sample: Teeth Whitening
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Display Area -->
+    <div id="contentArea" class="hidden">
+        <!-- Dynamic Meta Information -->
+        <div class="max-w-6xl mx-auto px-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Content Metrics</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600" id="wordCount">-</div>
+                        <div class="text-sm text-gray-600">Words</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600" id="keywordDensity">-</div>
+                        <div class="text-sm text-gray-600">Keyword Density</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-purple-600" id="searchIntent">-</div>
+                        <div class="text-sm text-gray-600">Search Intent</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-orange-600" id="targetLength">-</div>
+                        <div class="text-sm text-gray-600">Target Length</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEO Metadata Display -->
+        <div class="max-w-6xl mx-auto px-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">SEO Metadata</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
+                        <div id="metaTitle" class="bg-gray-50 p-3 rounded border text-sm">-</div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+                        <div id="metaDescription" class="bg-gray-50 p-3 rounded border text-sm">-</div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Focus Keywords</label>
+                        <div id="focusKeywords" class="bg-gray-50 p-3 rounded border text-sm">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Display -->
+        <main class="content-gradient">
+            <div class="max-w-4xl mx-auto px-6 py-12">
+                <article id="articleContent" class="prose-custom">
+                    <!-- Content will be dynamically inserted here -->
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center">
+                <h3 class="text-lg font-semibold mb-2">SEO Content Engine Template</h3>
+                <p class="text-gray-400 text-sm">Dynamic visualization for your AI-generated content</p>
+                <div class="mt-4 text-xs text-gray-500">
+                    <p>&copy; 2025 AI Content Engine. Template for demonstration and visualization.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentContent = null;
+
+        // File handling
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const browseButton = document.getElementById('browseButton');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const contentArea = document.getElementById('contentArea');
+
+        // File input events
+        browseButton.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop events
+        dropZone.addEventListener('dragover', handleDragOver);
+        dropZone.addEventListener('dragleave', handleDragLeave);
+        dropZone.addEventListener('drop', handleDrop);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        function processFile(file) {
+            if (file.type !== 'application/json') {
+                alert('Please select a JSON file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const jsonData = JSON.parse(e.target.result);
+                    displayContent(jsonData, file.name);
+                } catch (error) {
+                    alert('Error parsing JSON file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Load sample file function
+        async function loadSampleFile(filename) {
+            try {
+                const response = await fetch(filename);
+                if (!response.ok) {
+                    throw new Error('File not found');
+                }
+                const jsonData = await response.json();
+                displayContent(jsonData, filename);
+            } catch (error) {
+                alert('Error loading sample file: ' + error.message);
+                console.error('Sample file load error:', error);
+            }
+        }
+
+        function displayContent(jsonData, filename) {
+            // Handle array format (multiple items) vs single object
+            const contentData = Array.isArray(jsonData) ? jsonData[0] : jsonData;
+            
+            if (!contentData || !contentData.content) {
+                alert('Invalid JSON format. Expected content object.');
+                return;
+            }
+
+            currentContent = contentData;
+
+            // Show file info
+            fileName.textContent = filename;
+            fileInfo.classList.remove('hidden');
+
+            // Update metrics
+            document.getElementById('wordCount').textContent = contentData.content.wordCount || '-';
+            document.getElementById('keywordDensity').textContent = contentData.content.keywordDensity || '-';
+            document.getElementById('searchIntent').textContent = contentData.contentStrategy?.searchIntent || '-';
+            document.getElementById('targetLength').textContent = contentData.contentStrategy?.targetLength || '-';
+
+            // Update SEO metadata
+            document.getElementById('metaTitle').textContent = contentData.seo?.metaTitle || '-';
+            document.getElementById('metaDescription').textContent = contentData.seo?.metaDescription || '-';
+            document.getElementById('focusKeywords').textContent = 
+                contentData.seo?.focusKeywords ? contentData.seo.focusKeywords.join(', ') : '-';
+
+            // Update page title and meta
+            if (contentData.seo?.metaTitle) {
+                document.title = contentData.seo.metaTitle;
+            }
+
+            // Process and display content
+            let htmlContent = contentData.content.html || '';
+            
+            // Clean up the content
+            htmlContent = cleanAndEnhanceContent(htmlContent);
+
+            // Display the content
+            document.getElementById('articleContent').innerHTML = htmlContent;
+
+            // Show content area
+            contentArea.classList.remove('hidden');
+
+            // Smooth scroll to content
+            contentArea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cleanAndEnhanceContent(html) {
+            // First, extract content from markdown code blocks
+            html = html
+                .replace(/```html\s*([\s\S]*?)```/gi, '$1') // Extract HTML from code blocks
+                .replace(/```([\s\S]*?)```/gi, '$1') // Extract any other code blocks
+
+            // Remove any remaining em dashes and replace with clean alternatives
+            html = html
+                .replace(/—/g, ', ')
+                .replace(/–/g, ' to ')
+                .replace(/\s+,\s+/g, ', ')
+                .replace(/\s+\.\s+/g, '. ')
+                .replace(/\s+/g, ' ');
+
+            // Check for and warn about placeholder content
+            const placeholders = html.match(/\[COMPARISON_TABLE\]|\[DECISION_FLOWCHART\]|\[INFOGRAPHIC[^\]]*\]|\[INSERT[^\]]*\]/gi);
+            if (placeholders && placeholders.length > 0) {
+                console.warn('Found placeholder content that should be replaced:', placeholders);
+                // Show warning in UI
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6';
+                warningDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <div>
+                            <h3 class="text-yellow-800 font-medium">Content Quality Warning</h3>
+                            <p class="text-yellow-700 text-sm mt-1">This content contains ${placeholders.length} placeholder(s) that need to be replaced with actual content. The engine should generate complete content instead of placeholders.</p>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('articleContent').prepend(warningDiv);
+            }
+
+            // Check for markdown code block syntax that might have been missed
+            const codeBlockRemains = html.match(/```[\s\S]*?```/gi);
+            if (codeBlockRemains && codeBlockRemains.length > 0) {
+                console.warn('Found remaining markdown code blocks:', codeBlockRemains);
+                const codeWarningDiv = document.createElement('div');
+                codeWarningDiv.className = 'bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6';
+                codeWarningDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-orange-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd"></path>
+                        </svg>
+                        <div>
+                            <h3 class="text-orange-800 font-medium">Markdown Code Block Detected</h3>
+                            <p class="text-orange-700 text-sm mt-1">Found ${codeBlockRemains.length} markdown code block(s) in the content. The engine should output clean HTML without markdown formatting.</p>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('articleContent').prepend(codeWarningDiv);
+            }
+
+            // Remove empty HTML code blocks and placeholders
+            html = html
+                .replace(/```html\s*```/gi, '')
+                .replace(/```\s*```/gi, '')
+                .replace(/\[COMPARISON_TABLE\]/gi, '<div class="bg-red-50 border border-red-200 rounded p-4 my-4"><p class="text-red-700 font-medium">⚠️ Missing Comparison Table</p><p class="text-red-600 text-sm">The engine should generate an actual HTML table here instead of a placeholder.</p></div>')
+                .replace(/\[DECISION_FLOWCHART\]/gi, '<div class="bg-red-50 border border-red-200 rounded p-4 my-4"><p class="text-red-700 font-medium">⚠️ Missing Decision Flowchart</p><p class="text-red-600 text-sm">The engine should generate step-by-step decision guidance here instead of a placeholder.</p></div>')
+                .replace(/\[INFOGRAPHIC:[^\]]*\]/gi, '<div class="bg-red-50 border border-red-200 rounded p-4 my-4"><p class="text-red-700 font-medium">⚠️ Missing Infographic Content</p><p class="text-red-600 text-sm">The engine should generate detailed explanatory content here instead of a placeholder.</p></div>')
+                .replace(/<div><\/div>/gi, '');
+
+            // Enhance special elements
+            html = html
+                // Style "Did You Know" boxes
+                .replace(/<div><strong>Did You Know\?<\/strong>(.*?)<\/div>/gi, 
+                    '<div class="info-box rounded-lg p-4 mb-6"><div class="flex items-start"><div class="flex-shrink-0"><svg class="w-5 h-5 text-amber-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg></div><div class="ml-3"><p class="text-sm font-medium text-amber-800"><strong>Did You Know?</strong>$1</p></div></div></div>')
+                
+                // Style "Pro Tip" boxes
+                .replace(/<div><strong>Pro Tip:<\/strong>(.*?)<\/div>/gi, 
+                    '<div class="tip-box rounded-lg p-4 mb-6"><div class="flex items-start"><div class="flex-shrink-0"><svg class="w-5 h-5 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg></div><div class="ml-3"><p class="text-sm font-medium text-green-800"><strong>Pro Tip:</strong>$1</p></div></div></div>')
+                
+                // Style tables
+                .replace(/<table>/gi, '<div class="overflow-x-auto mb-8"><table class="comparison-table w-full bg-white rounded-lg shadow-sm border">')
+                .replace(/<\/table>/gi, '</table></div>')
+                
+                // Style table headers
+                .replace(/<th>/gi, '<th class="px-6 py-4 text-left text-sm font-semibold">')
+                .replace(/<td>/gi, '<td class="px-6 py-4 text-gray-700">');
+
+            return html;
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('SEO Content Engine Template Ready');
+        });
+    </script>
+</body>
+</html>

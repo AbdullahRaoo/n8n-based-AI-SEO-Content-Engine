@@ -1,0 +1,33 @@
+[
+  {
+    "id": "test-1",
+    "success": true,
+    "timestamp": "2025-01-30T10:00:00.000Z",
+    "input": {
+      "keyword": "test keyword",
+      "location": "United States"
+    },
+    "content": {
+      "html": "<h1>Test Article</h1><p>This is a test article for import functionality.</p>",
+      "wordCount": 100,
+      "keywordDensity": "2.0%"
+    },
+    "seo": {
+      "metaTitle": "Test Article | Import Test",
+      "metaDescription": "This is a test article to verify the import functionality works correctly.",
+      "focusKeywords": ["test keyword", "import test"],
+      "socialDescription": "Testing the import functionality of the SEO dashboard."
+    },
+    "contentStrategy": {
+      "searchIntent": "informational",
+      "targetLength": 500,
+      "uniqueAngles": ["test angle 1", "test angle 2"]
+    },
+    "validation": {
+      "targetKeyword": "test keyword",
+      "keywordMatches": 5,
+      "keywordDensity": "2.0%",
+      "validationApplied": true
+    }
+  }
+]

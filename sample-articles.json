@@ -1,0 +1,32 @@
+[
+  {
+    "success": true,
+    "timestamp": "2024-01-15T10:30:00.000Z",
+    "input": {
+      "keyword": "best coffee shops",
+      "location": "New York City"
+    },
+    "content": {
+      "html": "<h1>Best Coffee Shops in New York City</h1><p>Discover the most amazing coffee shops in NYC...</p>",
+      "wordCount": 850,
+      "keywordDensity": "2.35%"
+    },
+    "seo": {
+      "metaTitle": "Best Coffee Shops in New York City - Complete Guide 2024",
+      "metaDescription": "Find the best coffee shops in New York City with our comprehensive guide. From cozy cafes to artisan roasters, discover NYC's finest coffee destinations.",
+      "focusKeywords": ["best coffee shops", "NYC coffee", "New York coffee shops"],
+      "socialDescription": "Discover NYC's best coffee shops and cafes in our complete guide"
+    },
+    "contentStrategy": {
+      "searchIntent": "informational",
+      "targetLength": 800,
+      "uniqueAngles": ["local favorites", "hidden gems", "artisan roasters"]
+    },
+    "validation": {
+      "targetKeyword": "best coffee shops",
+      "keywordMatches": 12,
+      "keywordDensity": "2.35%",
+      "validationApplied": true
+    }
+  }
+]

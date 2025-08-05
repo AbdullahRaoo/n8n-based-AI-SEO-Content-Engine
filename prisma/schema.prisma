@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Article {
+  id        String   @id @default(cuid())
+  success   Boolean  @default(true)
+  timestamp DateTime @default(now())
+  
+  // Input data
+  keyword  String
+  location String
+  
+  // Content data
+  html            String
+  wordCount       Int
+  keywordDensity  String
+  
+  // SEO data
+  metaTitle         String
+  metaDescription   String
+  focusKeywords     String // JSON array as string
+  socialDescription String
+  schemaMarkup      String? // JSON as string
+  
+  // Content strategy
+  searchIntent   String
+  targetLength   Int
+  uniqueAngles   String // JSON array as string
+  
+  // Validation
+  targetKeyword      String
+  keywordMatches     Int
+  validationDensity  String
+  validationApplied  Boolean @default(false)
+  
+  // Status
+  status String @default("draft") // draft, published, processing
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("articles")
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "success": true,
+    "timestamp": "2025-07-29T19:28:07.180Z",
+    "input": {
+      "keyword": "test keyword",
+      "location": "United States"
+    },
+    "content": {
+      "html": "<h1>Test Article</h1><p>Test content</p>",
+      "wordCount": 10,
+      "keywordDensity": "2.0%"
+    },
+    "seo": {
+      "metaTitle": "Test Title",
+      "metaDescription": "Test description",
+      "focusKeywords": ["test"],
+      "socialDescription": "Social test"
+    },
+    "contentStrategy": {
+      "searchIntent": "informational",
+      "targetLength": 1000,
+      "uniqueAngles": ["angle1"]
+    },
+    "validation": {
+      "targetKeyword": "test keyword",
+      "keywordMatches": 5,
+      "keywordDensity": "2.0%",
+      "validationApplied": true
+    }
+  }
+]
