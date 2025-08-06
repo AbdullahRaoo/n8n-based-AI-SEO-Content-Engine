@@ -5,8 +5,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    // Generate a unique tracking ID for this request
-    const trackingId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    // Generate a unique tracking ID for this request in the specified format
+    const trackingId = `sce_${Date.now()}_${Math.random().toString(36).substr(2, 12)}`
     
     // Initialize status tracking
     initializeWorkflowStatus(trackingId)
@@ -54,7 +54,7 @@ async function startWorkflowAsync(body: any, trackingId: string) {
     const n8nPayload = {
       documentUrl: body.documentUrl, // Ensure this field is explicitly passed
       trackingId: trackingId,
-      callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/n8n-proxy/callback`,
+      callbackUrl: `http://srv926051.hstgr.cloud/api/n8n-proxy/callback`,
       // Include any other fields from the original request
       ...body
     }
