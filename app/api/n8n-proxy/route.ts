@@ -109,7 +109,7 @@ async function startWorkflowAsync(body: any, trackingId: string) {
       if (error.name === 'AbortError') {
         errorMessage = 'Workflow timed out after 5 minutes'
       } else if (error.message.includes('fetch') || error.message.includes('ECONNREFUSED')) {
-        errorMessage = 'Failed to connect to n8n service. Please ensure n8n is running on localhost:5678'
+        errorMessage = 'Failed to connect to n8n service at https://n8n.srv926051.hstgr.cloud'
       } else {
         errorMessage = error.message
       }

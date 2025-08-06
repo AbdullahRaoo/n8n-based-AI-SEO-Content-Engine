@@ -356,10 +356,8 @@ export default function SEOContentDashboard() {
       }, 3000) // Update every 3 seconds
 
       // Call the n8n webhook for real article generation
-      // Use development proxy to avoid CORS issues
-      const n8nUrl = process.env.NODE_ENV === 'development' 
-        ? '/api/n8n-proxy'  // Development proxy
-        : 'https://n8n.srv926051.hstgr.cloud/webhook/input-webhook-sce'  // Production direct call
+      // Always use the proxy to handle callbacks and avoid CORS issues
+      const n8nUrl = '/api/n8n-proxy'
       
       const n8nResponse = await fetch(n8nUrl, {
         method: 'POST',
@@ -528,7 +526,7 @@ export default function SEOContentDashboard() {
         if (error.name === 'AbortError') {
           errorMessage = "Content generation timed out (5 minutes). Please try again with a smaller document."
         } else if (error.message.includes('fetch')) {
-          errorMessage = "Failed to connect to content generation service. Please check if n8n is running on localhost:5678"
+          errorMessage = "Failed to connect to content generation service. Please check the n8n service status."
         } else {
           errorMessage = error.message
         }
