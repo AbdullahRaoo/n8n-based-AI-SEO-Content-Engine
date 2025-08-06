@@ -4,7 +4,19 @@ import { updateWorkflowStatus } from '../status/[trackingId]/route'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    console.log('📨 Received callback with new format:', JSON.stringify(body, null, 2))
+    
+    // Extract additional headers
+    const trackingIdHeader = request.headers.get('X-Tracking-ID')
+    const processingTimeHeader = request.headers.get('X-Processing-Time')
+    const engineVersionHeader = request.headers.get('X-Engine-Version')
+    
+    console.log('📨 Received callback with new format and headers:')
+    console.log('  Headers:', {
+      'X-Tracking-ID': trackingIdHeader,
+      'X-Processing-Time': processingTimeHeader,
+      'X-Engine-Version': engineVersionHeader
+    })
+    console.log('  Body:', JSON.stringify(body, null, 2))
     
     const { 
       trackingId, 
@@ -58,6 +70,15 @@ export async function POST(request: NextRequest) {
     if (originalRequest) {
       console.log('📄 Original request:', JSON.stringify(originalRequest, null, 2))
     }
+    
+    // Validate header/body consistency
+    if (trackingIdHeader && trackingIdHeader !== trackingId) {
+      console.warn('⚠️ Tracking ID mismatch between header and body:', { header: trackingIdHeader, body: trackingId })
+    }
+    
+    if (processingTimeHeader && processingTimeSeconds && parseInt(processingTimeHeader) !== processingTimeSeconds) {
+      console.warn('⚠️ Processing time mismatch between header and body:', { header: processingTimeHeader, body: processingTimeSeconds })
+    }
 
     // Update the workflow status
     updateWorkflowStatus(
@@ -77,7 +98,12 @@ export async function POST(request: NextRequest) {
         trackingId,
         status: workflowStatus,
         processingTime: processingTimeSeconds,
-        completedAt: completedTime
+        completedAt: completedTime,
+        headers: {
+          'X-Tracking-ID': trackingIdHeader,
+          'X-Processing-Time': processingTimeHeader,
+          'X-Engine-Version': engineVersionHeader
+        }
       }
     })
 
