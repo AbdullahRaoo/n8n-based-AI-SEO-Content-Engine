@@ -345,23 +345,10 @@ export default function SEOContentDashboard() {
     setProcessingStage("Connecting to SEO Content Engine...")
 
     try {
-      // Real-time progress updates for user experience
-      const progressInterval = setInterval(() => {
-        setProcessingProgress((prev) => {
-          if (prev < 90) {
-            return prev + 2
-          }
-          return prev
-        })
-      }, 3000) // Update every 3 seconds
-
-      // Call the n8n webhook for real article generation
-      // Use development proxy to avoid CORS issues
-      const n8nUrl = process.env.NODE_ENV === 'development' 
-        ? '/api/n8n-proxy'  // Development proxy
-        : 'https://n8n.srv926051.hstgr.cloud/webhook/input-webhook-sce'  // Production direct call
+      // Step 1: Start the workflow (immediate response with tracking ID)
+      console.log('🚀 Starting workflow with fire-and-forget pattern...')
       
-      const n8nResponse = await fetch(n8nUrl, {
+      const n8nResponse = await fetch('/api/n8n-proxy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -371,99 +358,190 @@ export default function SEOContentDashboard() {
         body: JSON.stringify({
           documentUrl: googleDocsUrl
         }),
-        // 5 minute timeout as recommended
-        signal: AbortSignal.timeout(300000)
+        // Short timeout for the initial request (should be immediate)
+        signal: AbortSignal.timeout(30000) // 30 seconds
       })
-
-      clearInterval(progressInterval)
 
       if (!n8nResponse.ok) {
         const errorText = await n8nResponse.text()
-        throw new Error(`n8n API Error ${n8nResponse.status}: ${errorText}`)
+        throw new Error(`Proxy API Error ${n8nResponse.status}: ${errorText}`)
       }
 
-      const n8nResult = await n8nResponse.json()
+      const proxyResult = await n8nResponse.json()
       
-      if (!n8nResult.success) {
-        throw new Error(n8nResult.message || 'Content generation failed')
+      if (!proxyResult.success) {
+        throw new Error(proxyResult.error || 'Failed to start workflow')
       }
 
-      setProcessingProgress(95)
-      setProcessingStage("Saving article to database...")
+      const trackingId = proxyResult.trackingId
+      console.log(`✅ Workflow started successfully with tracking ID: ${trackingId}`)
 
-      // Convert n8n response to our Article format
-      const newArticle: Article = {
-        id: `n8n-generated-${Date.now()}`,
-        success: n8nResult.success,
-        timestamp: n8nResult.timestamp || new Date().toISOString(),
-        input: {
-          keyword: n8nResult.input?.keyword || "Generated keyword",
-          location: n8nResult.input?.location || "United States",
-        },
-        content: {
-          html: n8nResult.content?.html || "<p>Generated content</p>",
-          wordCount: n8nResult.content?.wordCount || 0,
-          keywordDensity: n8nResult.content?.keywordDensity || "0%",
-        },
-        seo: {
-          metaTitle: n8nResult.seo?.metaTitle || "Generated Title",
-          metaDescription: n8nResult.seo?.metaDescription || "Generated description",
-          focusKeywords: n8nResult.seo?.focusKeywords || [],
-          socialDescription: n8nResult.seo?.socialDescription || "",
-          schemaMarkup: n8nResult.seo?.schemaMarkup,
-        },
-        contentStrategy: {
-          searchIntent: n8nResult.contentStrategy?.searchIntent || "informational",
-          targetLength: n8nResult.contentStrategy?.targetLength || 1500,
-          uniqueAngles: n8nResult.contentStrategy?.uniqueAngles || [],
-        },
-        validation: {
-          targetKeyword: n8nResult.validation?.targetKeyword || n8nResult.input?.keyword || "generated",
-          keywordMatches: n8nResult.validation?.keywordMatches || 0,
-          keywordDensity: n8nResult.validation?.keywordDensity || "0%",
-          validationApplied: n8nResult.validation?.validationApplied || false,
-        },
-        status: "draft",
-      }
+      setProcessingStage("Processing in background...")
+      setProcessingProgress(20)
 
-      // Save to database
-      const response = await fetch('/api/articles/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newArticle),
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to save article to database')
-      }
+      // Step 2: Poll for status updates
+      const pollForStatus = async () => {
+        let attempts = 0
+        const maxAttempts = 60 // 5 minutes (60 × 5 seconds)
+        
+        while (attempts < maxAttempts) {
+          try {
+            console.log(`🔄 Polling status (attempt ${attempts + 1}/${maxAttempts})...`)
+            
+            const statusResponse = await fetch(`/api/n8n-proxy/status/${trackingId}`, {
+              method: 'GET',
+              signal: AbortSignal.timeout(10000) // 10 second timeout for status checks
+            })
 
-      setProcessingProgress(100)
-      setProcessingStage("Complete!")
+            if (statusResponse.ok) {
+              const statusResult = await statusResponse.json()
+              console.log(`📊 Status result:`, statusResult)
 
-      // Refresh articles from database
-      try {
-        const articlesResponse = await fetch('/api/articles')
-        if (articlesResponse.ok) {
-          const apiResponse = await articlesResponse.json()
-          if (apiResponse.success && apiResponse.articles) {
-            const validArticles = Array.isArray(apiResponse.articles) ? apiResponse.articles : []
-            setArticles(validArticles)
+              if (statusResult.success) {
+                if (statusResult.status === 'completed') {
+                  console.log('✅ Workflow completed successfully!')
+                  
+                  // Extract the actual content from the result
+                  const n8nResult = statusResult.result
+                  
+                  if (!n8nResult) {
+                    throw new Error('No result data received from workflow')
+                  }
+                  
+                  setProcessingProgress(95)
+                  setProcessingStage("Saving article to database...")
+
+                  // Convert n8n response to our Article format
+                  const newArticle: Article = {
+                    id: `n8n-generated-${Date.now()}`,
+                    success: n8nResult.success !== false,
+                    timestamp: n8nResult.timestamp || new Date().toISOString(),
+                    input: {
+                      keyword: n8nResult.input?.keyword || "Generated keyword",
+                      location: n8nResult.input?.location || "United States",
+                    },
+                    content: {
+                      html: n8nResult.content?.html || "<p>Generated content</p>",
+                      wordCount: n8nResult.content?.wordCount || 0,
+                      keywordDensity: n8nResult.content?.keywordDensity || "0%",
+                    },
+                    seo: {
+                      metaTitle: n8nResult.seo?.metaTitle || "Generated Title",
+                      metaDescription: n8nResult.seo?.metaDescription || "Generated description",
+                      focusKeywords: n8nResult.seo?.focusKeywords || [],
+                      socialDescription: n8nResult.seo?.socialDescription || "",
+                      schemaMarkup: n8nResult.seo?.schemaMarkup,
+                    },
+                    contentStrategy: {
+                      searchIntent: n8nResult.contentStrategy?.searchIntent || "informational",
+                      targetLength: n8nResult.contentStrategy?.targetLength || 1500,
+                      uniqueAngles: n8nResult.contentStrategy?.uniqueAngles || [],
+                    },
+                    validation: {
+                      targetKeyword: n8nResult.validation?.targetKeyword || n8nResult.input?.keyword || "generated",
+                      keywordMatches: n8nResult.validation?.keywordMatches || 0,
+                      keywordDensity: n8nResult.validation?.keywordDensity || "0%",
+                      validationApplied: n8nResult.validation?.validationApplied || false,
+                    },
+                    status: "draft",
+                  }
+
+                  // Save to database
+                  const response = await fetch('/api/articles/create', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(newArticle),
+                  })
+                  
+                  if (!response.ok) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || 'Failed to save article to database')
+                  }
+
+                  setProcessingProgress(100)
+                  setProcessingStage("Complete!")
+
+                  // Refresh articles from database
+                  try {
+                    const articlesResponse = await fetch('/api/articles')
+                    if (articlesResponse.ok) {
+                      const apiResponse = await articlesResponse.json()
+                      if (apiResponse.success && apiResponse.articles) {
+                        const validArticles = Array.isArray(apiResponse.articles) ? apiResponse.articles : []
+                        setArticles(validArticles)
+                      }
+                    }
+                  } catch (error) {
+                    console.error("Failed to refresh articles:", error)
+                  }
+
+                  setIsProcessing(false)
+                  setGoogleDocsUrl("")
+
+                  toast({
+                    title: "Success!",
+                    description: `Article "${newArticle.seo.metaTitle}" generated and saved successfully`,
+                  })
+
+                  return // Exit polling
+                  
+                } else if (statusResult.status === 'failed') {
+                  console.log('❌ Workflow failed:', statusResult.error)
+                  throw new Error(statusResult.error || 'Workflow failed')
+                  
+                } else if (statusResult.status === 'processing') {
+                  // Still processing, continue polling
+                  console.log('⏳ Still processing...')
+                  
+                  // Update progress based on time elapsed
+                  const progressUpdate = Math.min(90, 20 + (attempts * 1.2))
+                  setProcessingProgress(progressUpdate)
+                  
+                  // Update stage message periodically
+                  const stages = [
+                    "Processing Google Docs document...",
+                    "Extracting business information...", 
+                    "Researching target keywords...",
+                    "Analyzing search competition...",
+                    "Generating SEO-optimized content...",
+                    "Optimizing for search engines...",
+                    "Finalizing article structure..."
+                  ]
+                  const stageIndex = Math.floor(attempts / 8) % stages.length
+                  setProcessingStage(stages[stageIndex])
+                }
+              } else {
+                console.log('⚠️ Status check returned error:', statusResult.error)
+                
+                // If tracking ID not found, it might have expired
+                if (statusResult.error?.includes('not found') || statusResult.error?.includes('expired')) {
+                  throw new Error('Workflow tracking expired. This usually means the process took too long.')
+                }
+              }
+            }
+            
+          } catch (pollError) {
+            console.error('❌ Status polling error:', pollError)
+            
+            // Don't fail immediately on polling errors, continue trying
+            if (attempts >= maxAttempts - 1) {
+              throw pollError
+            }
           }
+          
+          // Wait 5 seconds before next poll
+          await new Promise(resolve => setTimeout(resolve, 5000))
+          attempts++
         }
-      } catch (error) {
-        console.error("Failed to refresh articles:", error)
+        
+        // If we get here, we've exceeded max attempts
+        throw new Error('Workflow timed out after 5 minutes. This may happen with very large documents.')
       }
 
-      setIsProcessing(false)
-      setGoogleDocsUrl("")
-
-      toast({
-        title: "Success!",
-        description: `Article "${newArticle.seo.metaTitle}" generated and saved successfully`,
-      })
+      // Start polling
+      await pollForStatus()
 
     } catch (error) {
       console.error("Content generation error:", error)
@@ -471,9 +549,9 @@ export default function SEOContentDashboard() {
       let errorMessage = "Failed to generate article"
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          errorMessage = "Content generation timed out (5 minutes). Please try again with a smaller document."
+          errorMessage = "Request timed out. Please try again with a smaller document."
         } else if (error.message.includes('fetch')) {
-          errorMessage = "Failed to connect to content generation service. Please check if n8n is running on localhost:5678"
+          errorMessage = "Failed to connect to content generation service."
         } else {
           errorMessage = error.message
         }
