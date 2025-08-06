@@ -444,34 +444,51 @@ export default function SEOContentDashboard() {
       setProcessingProgress(95)
       setProcessingStage("Saving article to database...")
 
-      // Convert n8n response to our Article format
+      // Validate that we have the required data from the workflow
+      if (!finalResult.success) {
+        throw new Error('Workflow did not complete successfully')
+      }
+
+      if (!finalResult.input?.keyword) {
+        throw new Error('Workflow did not provide required input keyword')
+      }
+
+      if (!finalResult.content?.html) {
+        throw new Error('Workflow did not provide required content HTML')
+      }
+
+      if (!finalResult.seo?.metaTitle) {
+        throw new Error('Workflow did not provide required SEO meta title')
+      }
+
+      // Use ONLY the data from the workflow - no fallback values
       const newArticle: Article = {
         id: `n8n-generated-${Date.now()}`,
         success: finalResult.success,
         timestamp: finalResult.timestamp || new Date().toISOString(),
         input: {
-          keyword: finalResult.input?.keyword || "Generated keyword",
-          location: finalResult.input?.location || "United States",
+          keyword: finalResult.input.keyword,
+          location: finalResult.input.location || "Not specified",
         },
         content: {
-          html: finalResult.content?.html || "<p>Generated content</p>",
-          wordCount: finalResult.content?.wordCount || 0,
-          keywordDensity: finalResult.content?.keywordDensity || "0%",
+          html: finalResult.content.html,
+          wordCount: finalResult.content.wordCount || 0,
+          keywordDensity: finalResult.content.keywordDensity || "0%",
         },
         seo: {
-          metaTitle: finalResult.seo?.metaTitle || "Generated Title",
-          metaDescription: finalResult.seo?.metaDescription || "Generated description",
-          focusKeywords: finalResult.seo?.focusKeywords || [],
-          socialDescription: finalResult.seo?.socialDescription || "",
-          schemaMarkup: finalResult.seo?.schemaMarkup,
+          metaTitle: finalResult.seo.metaTitle,
+          metaDescription: finalResult.seo.metaDescription || "",
+          focusKeywords: finalResult.seo.focusKeywords || [],
+          socialDescription: finalResult.seo.socialDescription || "",
+          schemaMarkup: finalResult.seo.schemaMarkup,
         },
         contentStrategy: {
           searchIntent: finalResult.contentStrategy?.searchIntent || "informational",
-          targetLength: finalResult.contentStrategy?.targetLength || 1500,
+          targetLength: finalResult.contentStrategy?.targetLength || 0,
           uniqueAngles: finalResult.contentStrategy?.uniqueAngles || [],
         },
         validation: {
-          targetKeyword: finalResult.validation?.targetKeyword || finalResult.input?.keyword || "generated",
+          targetKeyword: finalResult.validation?.targetKeyword || finalResult.input.keyword,
           keywordMatches: finalResult.validation?.keywordMatches || 0,
           keywordDensity: finalResult.validation?.keywordDensity || "0%",
           validationApplied: finalResult.validation?.validationApplied || false,
@@ -526,7 +543,7 @@ export default function SEOContentDashboard() {
         if (error.name === 'AbortError') {
           errorMessage = "Content generation timed out (5 minutes). Please try again with a smaller document."
         } else if (error.message.includes('fetch')) {
-          errorMessage = "Failed to connect to content generation service. Please check the n8n service status."
+          errorMessage = "Failed to connect to content generation service. Please check if n8n is running on localhost:5678"
         } else {
           errorMessage = error.message
         }
