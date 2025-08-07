@@ -10,13 +10,23 @@ export async function POST(request: NextRequest) {
     const processingTimeHeader = request.headers.get('X-Processing-Time')
     const engineVersionHeader = request.headers.get('X-Engine-Version')
     
-    console.log('📨 Received callback with new format and headers:')
+    console.log('📨 Received callback:')
     console.log('  Headers:', {
       'X-Tracking-ID': trackingIdHeader,
       'X-Processing-Time': processingTimeHeader,
       'X-Engine-Version': engineVersionHeader
     })
     console.log('  Body:', JSON.stringify(body, null, 2))
+    
+    // Handle nested structure from n8n workflow
+    // n8n might send: { result: { trackingId, status, ... } } or direct: { trackingId, status, ... }
+    let callbackData = body
+    
+    // Check if data is nested under 'result' key
+    if (body.result && typeof body.result === 'object') {
+      console.log('🔍 Found nested result structure, extracting...')
+      callbackData = body.result
+    }
     
     const { 
       trackingId, 
@@ -28,15 +38,23 @@ export async function POST(request: NextRequest) {
       startTime,
       originalRequest,
       metadata
-    } = body
+    } = callbackData
     
-    if (!trackingId) {
-      console.error('❌ Callback missing trackingId')
+    // Also try to get trackingId from URL query params as fallback
+    const urlTrackingId = new URL(request.url).searchParams.get('trackingId')
+    const finalTrackingId = trackingId || urlTrackingId
+    
+    if (!finalTrackingId) {
+      console.error('❌ Callback missing trackingId in both body and URL params')
+      console.error('   Body keys:', Object.keys(callbackData))
+      console.error('   URL:', request.url)
       return NextResponse.json(
         { success: false, error: 'Tracking ID is required' },
         { status: 400 }
       )
     }
+
+    console.log(`✅ Using tracking ID: ${finalTrackingId}`)
 
     // Handle the new callback format with status field
     let workflowStatus: 'completed' | 'failed' | 'processing'
@@ -72,8 +90,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Validate header/body consistency
-    if (trackingIdHeader && trackingIdHeader !== trackingId) {
-      console.warn('⚠️ Tracking ID mismatch between header and body:', { header: trackingIdHeader, body: trackingId })
+    if (trackingIdHeader && trackingIdHeader !== finalTrackingId) {
+      console.warn('⚠️ Tracking ID mismatch between header and body:', { header: trackingIdHeader, body: finalTrackingId })
     }
     
     if (processingTimeHeader && processingTimeSeconds && parseInt(processingTimeHeader) !== processingTimeSeconds) {
@@ -82,20 +100,20 @@ export async function POST(request: NextRequest) {
 
     // Update the workflow status
     updateWorkflowStatus(
-      trackingId,
+      finalTrackingId,
       workflowStatus,
       workflowResult,
       workflowError
     )
 
-    const logMessage = `Workflow ${trackingId} ${workflowStatus}${processingTimeSeconds ? ` in ${processingTimeSeconds}s` : ''}`
+    const logMessage = `Workflow ${finalTrackingId} ${workflowStatus}${processingTimeSeconds ? ` in ${processingTimeSeconds}s` : ''}`
     console.log(`✅ ${logMessage}`)
 
     return NextResponse.json({
       success: true,
       message: 'Status updated successfully',
       received: {
-        trackingId,
+        trackingId: finalTrackingId,
         status: workflowStatus,
         processingTime: processingTimeSeconds,
         completedAt: completedTime,
