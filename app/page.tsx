@@ -405,7 +405,7 @@ export default function SEOContentDashboard() {
         
         // Poll for completion
         const pollForCompletion = async (trackingId: string): Promise<any> => {
-          const maxAttempts = 40 // 40 attempts * 5 seconds = 200 seconds (3+ minutes)
+          const maxAttempts = 36 // 36 attempts * 5 seconds = 180 seconds (3 minutes)
           let attempts = 0
           
           while (attempts < maxAttempts) {
@@ -445,22 +445,22 @@ export default function SEOContentDashboard() {
             }
           }
           
-          throw new Error('Workflow timed out after 3+ minutes')
+          throw new Error('Workflow timed out after 3 minutes - no callback received')
         }
         
-        // Wait for completion - this will be the ACTUAL content
+        // Wait for completion - this will be the ACTUAL content from callback
         finalResult = await pollForCompletion(finalResult.trackingId)
         
-      } else if (!finalResult.success) {
-        throw new Error(finalResult.message || 'Content generation failed')
-      } else if (!finalResult.trackingId) {
-        console.log('❌ CRITICAL ERROR: No tracking ID found in response!')
-        console.log('🔍 DEBUG: Full response that lacks trackingId:', JSON.stringify(finalResult, null, 2))
-        throw new Error('Invalid response from n8n proxy: Missing tracking ID. This means the proxy is not working correctly.')
+        // CRITICAL: Only continue if we actually got callback data
+        if (!finalResult || typeof finalResult !== 'object') {
+          throw new Error('Invalid callback data received - no content to process')
+        }
+        
       } else {
-        console.log('❌ CRITICAL ERROR: Unexpected response format!')
-        console.log('🔍 DEBUG: Unexpected response:', JSON.stringify(finalResult, null, 2))
-        throw new Error('Unexpected response format from n8n proxy. Expected trackingId and processing status.')
+        // NEVER process any response without trackingId - this prevents processing the initial confirmation
+        console.log('❌ CRITICAL ERROR: Initial response is not for processing!')
+        console.log('🔍 DEBUG: This is the confirmation response, not content:', JSON.stringify(finalResult, null, 2))
+        throw new Error('Received confirmation response instead of content. System should wait for callback.')
       }
 
       clearInterval(progressInterval)
