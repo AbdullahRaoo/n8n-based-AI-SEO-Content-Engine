@@ -344,9 +344,11 @@ export default function SEOContentDashboard() {
     setProcessingProgress(0)
     setProcessingStage("Connecting to SEO Content Engine...")
 
+    let progressInterval: NodeJS.Timeout | null = null
+
     try {
       // Real-time progress updates for user experience
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setProcessingProgress((prev) => {
           if (prev < 90) {
             return prev + 2
@@ -455,6 +457,159 @@ export default function SEOContentDashboard() {
         if (!finalResult || typeof finalResult !== 'object') {
           throw new Error('Invalid callback data received - no content to process')
         }
+
+        clearInterval(progressInterval)
+        setProcessingProgress(95)
+        setProcessingStage("Saving article to database...")
+
+        // DEBUG: Log the actual structure we received from workflow
+        console.log('🔍 DEBUG: Final result structure from workflow (CALLBACK DATA):', JSON.stringify(finalResult, null, 2))
+
+        // ADAPTIVE CONTENT PROCESSING: ONLY for callback data
+        const adaptContentToArticle = (workflowResult: any): Article => {
+          console.log('🔄 Adapting CALLBACK workflow result to Article format')
+          
+          // Helper function to safely get nested values
+          const getValue = (obj: any, path: string, fallback: any = '') => {
+            try {
+              return path.split('.').reduce((current, key) => current?.[key], obj) || fallback
+            } catch {
+              return fallback
+            }
+          }
+
+          // Helper function to extract first meaningful text content
+          const getFirstText = (data: any): string => {
+            if (typeof data === 'string' && data.trim()) return data.trim()
+            if (Array.isArray(data) && data.length > 0) return getFirstText(data[0])
+            if (typeof data === 'object' && data) {
+              for (const key in data) {
+                const value = getFirstText(data[key])
+                if (value) return value
+              }
+            }
+            return ''
+          }
+
+          // Debug: Log the data paths we're trying to extract from CALLBACK
+          console.log('🔍 DEBUGGING CALLBACK CONTENT EXTRACTION:')
+          console.log('  workflowResult keys:', Object.keys(workflowResult || {}))
+          console.log('  input.keyword:', getValue(workflowResult, 'input.keyword'))
+          console.log('  keyword:', getValue(workflowResult, 'keyword'))
+          console.log('  content.html preview:', getValue(workflowResult, 'content.html')?.substring(0, 100))
+          console.log('  html preview:', getValue(workflowResult, 'html')?.substring(0, 100))
+          console.log('  seo.metaTitle:', getValue(workflowResult, 'seo.metaTitle'))
+          console.log('  metaTitle:', getValue(workflowResult, 'metaTitle'))
+          console.log('  title:', getValue(workflowResult, 'title'))
+
+          // Adapt the content structure - NO FALLBACKS, only real data
+          const adapted: Article = {
+            id: `n8n-generated-${Date.now()}`,
+            success: workflowResult?.success !== false,
+            timestamp: workflowResult?.timestamp || new Date().toISOString(),
+            input: {
+              keyword: getValue(workflowResult, 'input.keyword') || 
+                      getValue(workflowResult, 'keyword') || 
+                      getFirstText(workflowResult?.keywords) ||
+                      '',
+              location: getValue(workflowResult, 'input.location') || 
+                       getValue(workflowResult, 'location') || 
+                       '',
+            },
+            content: {
+              html: getValue(workflowResult, 'content.html') || 
+                    getValue(workflowResult, 'html') || 
+                    getValue(workflowResult, 'content') ||
+                    '',
+              wordCount: parseInt(getValue(workflowResult, 'content.wordCount') || 
+                                getValue(workflowResult, 'wordCount') || '0') || 0,
+              keywordDensity: getValue(workflowResult, 'content.keywordDensity') || 
+                             getValue(workflowResult, 'keywordDensity') || '0%',
+            },
+            seo: {
+              metaTitle: getValue(workflowResult, 'seo.metaTitle') || 
+                        getValue(workflowResult, 'metaTitle') || 
+                        getValue(workflowResult, 'title') ||
+                        '',
+              metaDescription: getValue(workflowResult, 'seo.metaDescription') || 
+                              getValue(workflowResult, 'metaDescription') || 
+                              getValue(workflowResult, 'description') || '',
+              focusKeywords: Array.isArray(workflowResult?.seo?.focusKeywords) ? workflowResult.seo.focusKeywords :
+                            Array.isArray(workflowResult?.focusKeywords) ? workflowResult.focusKeywords :
+                            Array.isArray(workflowResult?.keywords) ? workflowResult.keywords : [],
+              socialDescription: getValue(workflowResult, 'seo.socialDescription') || 
+                                getValue(workflowResult, 'socialDescription') || '',
+              schemaMarkup: workflowResult?.seo?.schemaMarkup || workflowResult?.schemaMarkup,
+            },
+            contentStrategy: {
+              searchIntent: getValue(workflowResult, 'contentStrategy.searchIntent') || 
+                           getValue(workflowResult, 'searchIntent') || 'informational',
+              targetLength: parseInt(getValue(workflowResult, 'contentStrategy.targetLength') || 
+                                   getValue(workflowResult, 'targetLength') || '0') || 0,
+              uniqueAngles: Array.isArray(workflowResult?.contentStrategy?.uniqueAngles) ? workflowResult.contentStrategy.uniqueAngles :
+                           Array.isArray(workflowResult?.uniqueAngles) ? workflowResult.uniqueAngles : [],
+            },
+            validation: {
+              targetKeyword: getValue(workflowResult, 'validation.targetKeyword') || 
+                            getValue(workflowResult, 'targetKeyword') ||
+                            getValue(workflowResult, 'input.keyword') ||
+                            getValue(workflowResult, 'keyword') ||
+                            '',
+              keywordMatches: parseInt(getValue(workflowResult, 'validation.keywordMatches') || 
+                                     getValue(workflowResult, 'keywordMatches') || '0') || 0,
+              keywordDensity: getValue(workflowResult, 'validation.keywordDensity') || 
+                             getValue(workflowResult, 'content.keywordDensity') ||
+                             getValue(workflowResult, 'keywordDensity') || '0%',
+              validationApplied: workflowResult?.validation?.validationApplied !== false,
+            },
+            status: "draft",
+          }
+
+          console.log('✅ Successfully adapted CALLBACK workflow result to Article format')
+          return adapted
+        }
+
+        // Process ONLY callback data
+        const newArticle = adaptContentToArticle(finalResult)
+
+        // Save to database
+        const response = await fetch('/api/articles/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newArticle),
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to save article to database')
+        }
+
+        setProcessingProgress(100)
+        setProcessingStage("Complete!")
+
+        // Refresh articles from database
+        try {
+          const articlesResponse = await fetch('/api/articles')
+          if (articlesResponse.ok) {
+            const apiResponse = await articlesResponse.json()
+            if (apiResponse.success && apiResponse.articles) {
+              const validArticles = Array.isArray(apiResponse.articles) ? apiResponse.articles : []
+              setArticles(validArticles)
+            }
+          }
+        } catch (error) {
+          console.error("Failed to refresh articles:", error)
+        }
+
+        setIsProcessing(false)
+        setGoogleDocsUrl("")
+
+        toast({
+          title: "Success!",
+          description: `Article "${newArticle.seo.metaTitle || 'Generated Article'}" generated and saved successfully`,
+        })
         
       } else {
         // NEVER process any response without trackingId - this prevents processing the initial confirmation
@@ -462,16 +617,6 @@ export default function SEOContentDashboard() {
         console.log('🔍 DEBUG: This is the confirmation response, not content:', JSON.stringify(finalResult, null, 2))
         throw new Error('Received confirmation response instead of content. System should wait for callback.')
       }
-
-      clearInterval(progressInterval)
-      setProcessingProgress(95)
-      setProcessingStage("Saving article to database...")
-
-      // DEBUG: Log the actual structure we received from workflow
-      console.log('🔍 DEBUG: Final result structure from workflow:', JSON.stringify(finalResult, null, 2))
-
-      // ADAPTIVE CONTENT PROCESSING: Adapt whatever structure we get to our Article format
-      // No validation - just adapt and use what we have
       const adaptContentToArticle = (workflowResult: any): Article => {
         console.log('� Adapting workflow result to Article format')
         
@@ -626,6 +771,11 @@ export default function SEOContentDashboard() {
 
     } catch (error) {
       console.error("Content generation error:", error)
+      
+      // Make sure we stop the progress interval if it exists
+      if (progressInterval) {
+        clearInterval(progressInterval)
+      }
       
       let errorMessage = "Failed to generate article"
       if (error instanceof Error) {
