@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
 
     if (status === 'completed') {
       console.log('✅ Workflow completed successfully')
+      console.log('🔍 DEBUG: Raw result field:', JSON.stringify(result, null, 2))
       workflowStatus = 'completed'
       workflowResult = result
       workflowError = undefined
@@ -74,11 +75,13 @@ export async function POST(request: NextRequest) {
     } else {
       // Fallback to legacy format
       console.log('🔄 Using legacy format fallback')
-      const success = body.success
+      const success = callbackData.success || body.success
       workflowStatus = success ? 'completed' : 'failed'
-      workflowResult = success ? result : undefined
+      workflowResult = success ? (result || callbackData) : undefined
       workflowError = success ? undefined : (error || 'Workflow failed')
     }
+
+    console.log('📊 FINAL WORKFLOW RESULT BEING STORED:', JSON.stringify(workflowResult, null, 2))
 
     // Log additional metadata if available
     if (metadata) {

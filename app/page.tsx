@@ -392,8 +392,15 @@ export default function SEOContentDashboard() {
       }
       
       // Check if we got a tracking ID for async processing
+      console.log('🔍 DEBUG: Checking for trackingId and status in finalResult:', {
+        hasTrackingId: !!finalResult.trackingId,
+        trackingId: finalResult.trackingId,
+        status: finalResult.status,
+        success: finalResult.success
+      })
+      
       if (finalResult.trackingId && finalResult.status === 'processing') {
-        console.log('Workflow started with tracking ID:', finalResult.trackingId)
+        console.log('✅ Found tracking ID, starting async polling:', finalResult.trackingId)
         setProcessingStage("Workflow is processing...")
         
         // Poll for completion
@@ -446,6 +453,11 @@ export default function SEOContentDashboard() {
         
       } else if (!finalResult.success) {
         throw new Error(finalResult.message || 'Content generation failed')
+      } else if (!finalResult.trackingId) {
+        console.log('❌ ERROR: No tracking ID found in response - treating as synchronous result')
+        // This is likely the issue - we're getting a response without trackingId
+        // which means the proxy isn't working as expected
+        console.log('🔍 DEBUG: Full response that lacks trackingId:', JSON.stringify(finalResult, null, 2))
       }
 
       clearInterval(progressInterval)
@@ -472,7 +484,7 @@ export default function SEOContentDashboard() {
         // Helper function to extract first meaningful text content
         const getFirstText = (data: any): string => {
           if (typeof data === 'string' && data.trim()) return data.trim()
-          if (Array.isArray(data) && data.length > 0) return data[0] || ''
+          if (Array.isArray(data) && data.length > 0) return getFirstText(data[0])
           if (typeof data === 'object' && data) {
             for (const key in data) {
               const value = getFirstText(data[key])
@@ -481,6 +493,17 @@ export default function SEOContentDashboard() {
           }
           return ''
         }
+
+        // Debug: Log the data paths we're trying to extract from
+        console.log('🔍 DEBUGGING CONTENT EXTRACTION:')
+        console.log('  workflowResult keys:', Object.keys(workflowResult || {}))
+        console.log('  input.keyword:', getValue(workflowResult, 'input.keyword'))
+        console.log('  keyword:', getValue(workflowResult, 'keyword'))
+        console.log('  content.html preview:', getValue(workflowResult, 'content.html')?.substring(0, 100))
+        console.log('  html preview:', getValue(workflowResult, 'html')?.substring(0, 100))
+        console.log('  seo.metaTitle:', getValue(workflowResult, 'seo.metaTitle'))
+        console.log('  metaTitle:', getValue(workflowResult, 'metaTitle'))
+        console.log('  title:', getValue(workflowResult, 'title'))
 
         // Adapt the content structure
         const adapted: Article = {
