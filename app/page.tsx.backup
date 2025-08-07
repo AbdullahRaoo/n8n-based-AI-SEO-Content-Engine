@@ -727,49 +727,47 @@ export default function SEOContentDashboard() {
         return adapted
       }
 
-      // DUPLICATE CODE REMOVED - This was causing articles to be created twice
-      // const newArticle = adaptContentToArticle(finalResult)
+      // Use the adaptive function instead of validation
+      const newArticle = adaptContentToArticle(finalResult)
 
-      // DUPLICATE DATABASE SAVE REMOVED - This was causing duplicate articles
-      // const response = await fetch('/api/articles/create', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(newArticle),
-      // })
-      //
-      // if (!response.ok) {
-      //   const errorData = await response.json()
-      //   throw new Error(errorData.error || 'Failed to save article to database')
-      // }
+      // Save to database
+      const response = await fetch('/api/articles/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newArticle),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to save article to database')
+      }
 
-      // DUPLICATE UI UPDATES REMOVED - Already handled in polling success branch
-      // setProcessingProgress(100)
-      // setProcessingStage("Complete!")
-      //
-      // // Refresh articles from database
-      // try {
-      //   const articlesResponse = await fetch('/api/articles')
-      //   if (articlesResponse.ok) {
-      //     const apiResponse = await articlesResponse.json()
-      //     if (apiResponse.success && apiResponse.articles) {
-      //       const validArticles = Array.isArray(apiResponse.articles) ? apiResponse.articles : []
-      //       setArticles(validArticles)
-      //     }
-      //   }
-      // } catch (error) {
-      //   console.error("Failed to refresh articles:", error)
-      // }
-      //
-      // setIsProcessing(false)
-      // setGoogleDocsUrl("")
+      setProcessingProgress(100)
+      setProcessingStage("Complete!")
 
-      // DUPLICATE SUCCESS TOAST REMOVED - Already handled in polling success branch
-      // toast({
-      //   title: "Success!",
-      //   description: `Article "${newArticle.seo.metaTitle}" generated and saved successfully`,
-      // })
+      // Refresh articles from database
+      try {
+        const articlesResponse = await fetch('/api/articles')
+        if (articlesResponse.ok) {
+          const apiResponse = await articlesResponse.json()
+          if (apiResponse.success && apiResponse.articles) {
+            const validArticles = Array.isArray(apiResponse.articles) ? apiResponse.articles : []
+            setArticles(validArticles)
+          }
+        }
+      } catch (error) {
+        console.error("Failed to refresh articles:", error)
+      }
+
+      setIsProcessing(false)
+      setGoogleDocsUrl("")
+
+      toast({
+        title: "Success!",
+        description: `Article "${newArticle.seo.metaTitle}" generated and saved successfully`,
+      })
 
     } catch (error) {
       console.error("Content generation error:", error)
