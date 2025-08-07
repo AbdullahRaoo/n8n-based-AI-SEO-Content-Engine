@@ -96,10 +96,11 @@ async function startWorkflowAsync(body: any, trackingId: string) {
       throw new Error(`Invalid JSON response from n8n: ${responseText.substring(0, 100)}`)
     }
     
-    console.log(`✅ Workflow ${trackingId} completed successfully`)
+    console.log(`✅ Workflow ${trackingId} sent to n8n successfully - waiting for callback`)
     
-    // Update status with the result
-    updateWorkflowStatus(trackingId, 'completed', result)
+    // DO NOT update status here - let the callback handle completion
+    // The 'result' here is just the initial confirmation response
+    console.log(`🔍 Initial n8n response (NOT final content):`, JSON.stringify(result, null, 2))
     
   } catch (error) {
     console.error(`💥 Workflow ${trackingId} error:`, error)
