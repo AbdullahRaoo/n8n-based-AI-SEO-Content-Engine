@@ -454,10 +454,13 @@ export default function SEOContentDashboard() {
       } else if (!finalResult.success) {
         throw new Error(finalResult.message || 'Content generation failed')
       } else if (!finalResult.trackingId) {
-        console.log('❌ ERROR: No tracking ID found in response - treating as synchronous result')
-        // This is likely the issue - we're getting a response without trackingId
-        // which means the proxy isn't working as expected
+        console.log('❌ CRITICAL ERROR: No tracking ID found in response!')
         console.log('🔍 DEBUG: Full response that lacks trackingId:', JSON.stringify(finalResult, null, 2))
+        throw new Error('Invalid response from n8n proxy: Missing tracking ID. This means the proxy is not working correctly.')
+      } else {
+        console.log('❌ CRITICAL ERROR: Unexpected response format!')
+        console.log('🔍 DEBUG: Unexpected response:', JSON.stringify(finalResult, null, 2))
+        throw new Error('Unexpected response format from n8n proxy. Expected trackingId and processing status.')
       }
 
       clearInterval(progressInterval)
@@ -505,7 +508,7 @@ export default function SEOContentDashboard() {
         console.log('  metaTitle:', getValue(workflowResult, 'metaTitle'))
         console.log('  title:', getValue(workflowResult, 'title'))
 
-        // Adapt the content structure
+        // Adapt the content structure - NO FALLBACKS, only real data
         const adapted: Article = {
           id: `n8n-generated-${Date.now()}`,
           success: workflowResult?.success !== false, // Default to true unless explicitly false
@@ -514,16 +517,16 @@ export default function SEOContentDashboard() {
             keyword: getValue(workflowResult, 'input.keyword') || 
                     getValue(workflowResult, 'keyword') || 
                     getFirstText(workflowResult?.keywords) ||
-                    'Content Generated',
+                    '', // NO FALLBACK - must be real data
             location: getValue(workflowResult, 'input.location') || 
                      getValue(workflowResult, 'location') || 
-                     'Not specified',
+                     '', // NO FALLBACK - must be real data
           },
           content: {
             html: getValue(workflowResult, 'content.html') || 
                   getValue(workflowResult, 'html') || 
                   getValue(workflowResult, 'content') ||
-                  '<p>Generated content</p>',
+                  '', // NO FALLBACK - must be real data
             wordCount: parseInt(getValue(workflowResult, 'content.wordCount') || 
                               getValue(workflowResult, 'wordCount') || '0') || 0,
             keywordDensity: getValue(workflowResult, 'content.keywordDensity') || 
@@ -533,7 +536,7 @@ export default function SEOContentDashboard() {
             metaTitle: getValue(workflowResult, 'seo.metaTitle') || 
                       getValue(workflowResult, 'metaTitle') || 
                       getValue(workflowResult, 'title') ||
-                      'Generated Article',
+                      '', // NO FALLBACK - must be real data
             metaDescription: getValue(workflowResult, 'seo.metaDescription') || 
                             getValue(workflowResult, 'metaDescription') || 
                             getValue(workflowResult, 'description') || '',
@@ -557,7 +560,7 @@ export default function SEOContentDashboard() {
                           getValue(workflowResult, 'targetKeyword') ||
                           getValue(workflowResult, 'input.keyword') ||
                           getValue(workflowResult, 'keyword') ||
-                          'generated',
+                          '', // NO FALLBACK - must be real data
             keywordMatches: parseInt(getValue(workflowResult, 'validation.keywordMatches') || 
                                    getValue(workflowResult, 'keywordMatches') || '0') || 0,
             keywordDensity: getValue(workflowResult, 'validation.keywordDensity') || 
