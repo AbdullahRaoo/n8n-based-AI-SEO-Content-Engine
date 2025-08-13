@@ -1180,7 +1180,7 @@ export default function SEOContentDashboard() {
                   <span>Generate New SEO Article</span>
                 </CardTitle>
                 <CardDescription>
-                  Submit your Google Docs URL containing the CLIENT SEO KEYWORD STRATEGY BRIEF
+                  Submit your Google Docs URL containing the Client AIO Onboarding Form
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -1307,10 +1307,6 @@ export default function SEOContentDashboard() {
                           Import JSON
                         </Button>
                       </div>
-                      
-                      <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Import articles from n8n workflow output JSON files (SIMPLIFIED TEST MODE)
-                      </p>
                     </div>
                   </div>
                 </ErrorBoundary>
